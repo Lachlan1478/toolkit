@@ -1,0 +1,43 @@
+# === Environment & secrets ===
+.env
+.env.*
+
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+*.mypy_cache/
+
+# === Virtual environments ===
+.venv/
+venv/
+ENV/
+
+# === IDEs & Editors ===
+.vscode/
+.idea/
+*.swp
+
+# === Docker ===
+*.pid
+*.log
+*.db
+*.sock
+.docker/
+docker-compose.override.yml
+
+# === OS-specific ===
+.DS_Store
+Thumbs.db
+
+# === Test / Coverage ===
+.coverage
+htmlcov/
+.tox/
+
+# === Build / Dist ===
+build/
+dist/
+*.egg-info/
