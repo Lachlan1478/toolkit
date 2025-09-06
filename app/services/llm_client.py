@@ -3,26 +3,33 @@ import os, json, httpx
 OPENAI_API_KEY = os.getenv("LLM_API_KEY")
 MODEL = os.getenv("LLM_MODEL","gpt-4o-mini")  # choose yours
 
-def _chat(prompt: str, system: str = "") -> str:
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
-    messages=[{"role":"system","content":system},{"role":"user","content":prompt}]
-    r = httpx.post("https://api.openai.com/v1/chat/completions",
-                   headers=headers, timeout=60,
-                   json={"model": MODEL, "messages": messages, "response_format": {"type": "json_object"}})
+
+# app/services/llm_client.py  (keep stubs at top)
+
+def _openai_chat_json(system: str, user: str, model: str):
+    key = os.getenv("LLM_API_KEY")
+    headers = {"Authorization": f"Bearer {key}"}
+    payload = {
+        "model": os.getenv("LLM_MODEL", model),
+        "messages": [{"role":"system","content":system},{"role":"user","content":user}],
+        "response_format": {"type": "json_object"}
+    }
+    r = httpx.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, timeout=60)
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"]
 
 def ideate(criteria):
-    sys = "You are a product ideator for AU finance micro-SaaS. Output JSON list."
-    prompt = f"Propose 5 ideas that match: {criteria.model_dump_json()}. Include scores."
-    return json.loads(_chat(prompt, sys))  # ensure it returns a list
+    system = "You are a product ideator for AU finance micro-SaaS. Output ONLY valid JSON list."
+    user = f"Propose 5 ideas matching this criteria. Include scores for pain, speed, monetization, AU diff. Criteria={criteria.model_dump_json()}"
+    return json.loads(_openai_chat_json(system, user, "gpt-4o-mini"))
 
 def spec_writer(criteria, idea):
-    sys = "You output ONLY valid JSON for an App spec object."
-    prompt = f"Turn this into a minimal spec with data-test selectors and acceptance tests: {criteria.model_dump_json()} | idea={json.dumps(idea)}"
-    return json.loads(_chat(prompt, sys))
+    system = "You output ONLY valid JSON for an App spec object with acceptance_tests using data-test selectors."
+    user = f"Turn this idea and criteria into a minimal spec: criteria={criteria.model_dump_json()} idea={json.dumps(idea)}"
+    return json.loads(_openai_chat_json(system, user, "gpt-4o-mini"))
 
 def critic(spec, qa_report):
-    sys = "You output ONLY valid JSON for a ChangeRequest."
-    prompt = f"Spec: {json.dumps(spec)}\nQA: {json.dumps(qa_report)}\nReturn smallest ChangeRequest."
-    return json.loads(_chat(prompt, sys))
+    system = "You output ONLY valid JSON for a minimal ChangeRequest to pass next QA iteration."
+    user = f"Spec={json.dumps(spec)} QA={json.dumps(qa_report)}"
+    return json.loads(_openai_chat_json(system, user, "gpt-4o-mini"))
+

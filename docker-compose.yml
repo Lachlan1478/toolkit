@@ -1,8 +1,8 @@
-version: "3.9"
-
 services:
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.api
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     env_file: .env
     volumes:
@@ -14,7 +14,9 @@ services:
       - "8000:8000"
 
   worker:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
     command: celery -A worker.tasks worker -Q default -l INFO
     env_file: .env
     volumes:
