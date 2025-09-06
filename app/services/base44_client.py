@@ -5,7 +5,8 @@ from loguru import logger
 # ---------- STUBS (current behavior) ----------
 def base44_create_stub(spec):
     app_id = "app_" + uuid.uuid4().hex[:8]
-    preview_url = f"https://preview.base44.local/{app_id}"
+    # point to the local mock page the API serves
+    preview_url = "http://localhost:8000/api/mock_preview"
     logger.info(f"[Base44] CREATE {app_id} from spec '{spec['name']}'")
     return app_id, preview_url
 

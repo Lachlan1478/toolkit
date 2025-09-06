@@ -1,12 +1,13 @@
-version: "3.9"
-
 services:
   api:
     build:
       context: .
       dockerfile: Dockerfile.api
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    env_file: .env
+    env_file: ./.env
+    environment:
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4.1-mini}
     volumes:
       - ./:/usr/src/app
     ports:
@@ -23,7 +24,10 @@ services:
       context: .
       dockerfile: Dockerfile.worker
     command: celery -A worker.tasks worker -Q default -l INFO
-    env_file: .env
+    env_file: ./.env
+    environment:
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4.1-mini}
     volumes:
       - ./:/usr/src/app
     depends_on:
