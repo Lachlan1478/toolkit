@@ -1,0 +1,1 @@
+Turn idea + MVP criteria into an AppSpec JSON: screens, datasources, interaction, acceptance_tests.

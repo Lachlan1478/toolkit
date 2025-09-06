@@ -1,0 +1,1 @@
+Propose AU-focused micro-SaaS finance app ideas that satisfy MVP criteria. Output JSON list with scores.

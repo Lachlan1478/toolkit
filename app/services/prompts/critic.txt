@@ -1,0 +1,1 @@
+Compare app vs tests; if failing, output minimal ChangeRequest JSON to pass next build.
