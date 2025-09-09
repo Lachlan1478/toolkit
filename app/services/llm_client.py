@@ -117,6 +117,8 @@ def spec_writer(criteria, idea):
     system = "You output ONLY valid JSON for an App spec object with acceptance_tests using data-test selectors."
     user = f"Turn this idea and criteria into a minimal spec: criteria={criteria.model_dump_json()} idea={json.dumps(idea)}"
     raw = _openai_chat_json(system, user, "gpt-4o-mini", enforce_json_object=True)  # OBJECT → enforce
+
+    print("spec writer raw:", raw)  # Debug print
     return json.loads(_strip_fences(raw))
 
 def critic(spec, qa_report):

@@ -1,49 +1,50 @@
-# app/services/base44_client.py
-import os, httpx, uuid
+import os
 from loguru import logger
+from app.services.base44_bot import Base44Bot
 
-# ---------- STUBS (current behavior) ----------
+BASE44_MODE = os.getenv("BASE44_MODE", "ui").lower()  # 'ui' or 'stub'
+
+def base44_create(prompt_text: str):
+    """
+    Build via the UI (Playwright) and return (app_id, preview_url).
+    Falls back to stub if BASE44_MODE != 'ui'.
+    """
+    if BASE44_MODE != "ui":
+        logger.warning("[Base44] BASE44_MODE != ui; using stub create()")
+        return base44_create_stub({"name": "unknown"})
+
+    with Base44Bot() as bot:
+        logger.info("[Base44] Starting UI build…")
+        app_id, preview_url = bot.build_from_spec(prompt_text)
+        logger.info(f"[Base44] UI build ok: app_id={app_id} preview={preview_url}")
+        return app_id, preview_url
+
+def base44_update(app_id: str, change_request: dict):
+    """
+    (Optional) Implement update via UI:
+    - Navigate to app page
+    - Paste change request
+    - Click 'Update' and wait for completion
+    """
+    if BASE44_MODE != "ui":
+        logger.warning("[Base44] BASE44_MODE != ui; using stub update()")
+        return base44_update_stub(app_id, change_request)
+
+    # Example placeholder: you will mirror build_from_spec but on the app page.
+    # with Base44Bot() as bot:
+    #     bot.ensure_logged_in()
+    #     bot.page.goto(f"{BASE44_URL}/apps/{app_id}")
+    #     # paste CR, click Update, wait for preview readiness
+    #     return {"ok": True}
+
+# ---- existing stubs ----
+import uuid
 def base44_create_stub(spec):
     app_id = "app_" + uuid.uuid4().hex[:8]
-    # point to the local mock page the API serves
-    preview_url = "http://localhost:8000/api/mock_preview"
-    logger.info(f"[Base44] CREATE {app_id} from spec '{spec['name']}'")
+    preview_url = f"https://preview.base44.local/{app_id}"
+    logger.info(f"[Base44] CREATE {app_id} (stub)")
     return app_id, preview_url
 
 def base44_update_stub(app_id, change_request):
-    logger.info(f"[Base44] UPDATE {app_id} with CR: {change_request['reason']}")
-
-# ---------- REAL CLIENT (switch to these when Base44 is ready) ----------
-BASE44_API_URL = os.getenv("BASE44_API_URL", "").rstrip("/")
-BASE44_API_KEY = os.getenv("BASE44_API_KEY", "")
-
-def _hdrs():
-    return {"api_key": BASE44_API_KEY, "Content-Type": "application/json"}
-
-def make_build_prompt(spec: dict) -> str:
-    return (
-        "Build a minimal-dark mobile UI with three swipeable screens.\n"
-        "Selectors: data-test='overview|movers|news|gainer|loser|news-item'.\n"
-        "Follow constraints exactly. If a datasource is unavailable, stub clearly.\n"
-        f"SPEC JSON:\n{spec}\n"
-    )
-
-def base44_create(spec: dict):
-    prompt_text = make_build_prompt(spec)
-    r = httpx.post(f"{BASE44_API_URL}/apps.create", headers=_hdrs(), json={"prompt": prompt_text}, timeout=60)
-    r.raise_for_status()
-    data = r.json()
-    app_id = data["app_id"]
-    preview_url = data["preview_url"]
-    logger.info(f"[Base44] CREATE {app_id} from spec '{spec['name']}'")
-    return app_id, preview_url
-
-def base44_update(app_id: str, change_request: dict):
-    r = httpx.post(
-        f"{BASE44_API_URL}/apps.update",
-        headers=_hdrs(),
-        json={"app_id": app_id, "change_request": change_request},
-        timeout=60,
-    )
-    r.raise_for_status()
-    logger.info(f"[Base44] UPDATE {app_id} with CR: {change_request.get('reason','no-reason')}")
+    logger.info(f"[Base44] UPDATE {app_id} (stub) reason={change_request.get('reason')}")
+    return {"ok": True}
